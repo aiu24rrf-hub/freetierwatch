@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreeTierWatch — AI API Free Tier &amp; Pricing Tracker (Updated Daily)</title>
+<meta name="description" content="Every major AI API free tier — Gemini, OpenAI, Claude, Groq, Mistral and more — tracked and auto-verified daily. Plus a cost calculator to find the cheapest model for your workload.">
+<meta property="og:title" content="FreeTierWatch — AI API Free Tier Tracker">
+<meta property="og:description" content="Free tier limits and pricing for every major AI API, auto-verified daily. Stop digging through pricing pages.">
+<meta property="og:type" content="website">
+<style>
+:root{
+  --bg:#0b0e14; --bg2:#11151f; --card:#151a26; --border:#232a3a;
+  --text:#e6e9f0; --muted:#8b93a7; --accent:#4f8cff; --accent2:#38d39f;
+  --warn:#ffb454; --free:#38d39f; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{padding:18px 0;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10}
+.nav{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.25rem;letter-spacing:-.02em}
+.logo span{color:var(--accent2)}
+.nav .spacer{flex:1}
+.badge{font-size:.75rem;background:rgba(56,211,159,.12);color:var(--free);border:1px solid rgba(56,211,159,.35);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.lang-btn,.support-btn{cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 14px;border-radius:8px;font-size:.85rem}
+.support-btn{background:linear-gradient(135deg,#ff5f6d,#ffc371);border:none;color:#1a1a1a;font-weight:700}
+.hero{padding:56px 0 36px;text-align:center}
+.hero h1{font-size:clamp(1.7rem,4.5vw,2.7rem);letter-spacing:-.03em;line-height:1.2}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:640px;margin:14px auto 0;font-size:1.05rem}
+.updated{margin-top:16px;font-size:.85rem;color:var(--muted)}
+.updated b{color:var(--free)}
+section{padding:28px 0}
+h2{font-size:1.35rem;letter-spacing:-.02em;margin-bottom:6px}
+.sub{color:var(--muted);font-size:.95rem;margin-bottom:18px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.controls input[type=search]{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:.95rem}
+.tab{cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);padding:8px 16px;border-radius:8px;font-size:.9rem}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:820px}
+th{position:sticky;top:0;text-align:left;padding:12px 14px;background:var(--bg2);color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(79,140,255,.04)}
+.svc{font-weight:700;white-space:nowrap}
+.svc .cat{display:block;font-size:.72rem;color:var(--muted);font-weight:500}
+.freecell{color:var(--free)}
+.notes{color:var(--warn);font-size:.82rem}
+.price{font-family:var(--mono);font-size:.83rem;white-space:pre-line}
+.conf{font-size:.72rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.conf.high{background:rgba(56,211,159,.12);color:var(--free)}
+.conf.medium{background:rgba(255,180,84,.12);color:var(--warn)}
+.conf.low{background:rgba(255,95,109,.12);color:#ff8a95}
+.verified{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.calc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.calc .row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:18px}
+.calc .field{flex:1;min-width:220px}
+.calc label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.calc input[type=range]{width:100%}
+.calc .val{font-family:var(--mono);color:var(--accent2);font-size:1.05rem}
+.bars{display:flex;flex-direction:column;gap:10px}
+.barrow{display:grid;grid-template-columns:210px 1fr 110px;gap:12px;align-items:center;font-size:.88rem}
+.barrow .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bartrack{background:var(--bg2);border-radius:6px;height:22px;overflow:hidden}
+.barfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;min-width:3px}
+.barrow .cost{font-family:var(--mono);text-align:right}
+.barrow.freefit .barfill{background:var(--free)}
+.changes{display:flex;flex-direction:column;gap:10px}
+.change{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:.9rem}
+.change .date{color:var(--muted);font-size:.78rem;font-family:var(--mono)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}.barrow{grid-template-columns:130px 1fr 90px}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px}
+.card h3{margin-bottom:8px;font-size:1.05rem}
+.card p{color:var(--muted);font-size:.92rem}
+.cta{display:inline-block;margin-top:14px;background:var(--accent);color:#fff;padding:9px 18px;border-radius:8px;font-weight:600;font-size:.9rem}
+.cta.alt{background:linear-gradient(135deg,#ff5f6d,#ffc371);color:#1a1a1a}
+.faq details{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+.faq summary{cursor:pointer;font-weight:600}
+.faq p{color:var(--muted);margin-top:8px;font-size:.92rem}
+footer{border-top:1px solid var(--border);padding:32px 0;margin-top:40px;color:var(--muted);font-size:.85rem}
+footer .disclaimer{max-width:760px}
+.loading{text-align:center;color:var(--muted);padding:40px}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <div class="logo">FreeTier<span>Watch</span></div>
+  <span class="badge" data-i18n="badge">auto-verified daily</span>
+  <div class="spacer"></div>
+  <button class="lang-btn" id="langBtn">日本語</button>
+  <a class="support-btn" id="kofiTop" href="#support" data-i18n="support">☕ Support</a>
+</div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1 data-i18n-html="h1">Every AI API free tier.<br><em>Tracked daily, so you don't have to.</em></h1>
+    <p data-i18n="heroP">Free-tier limits and pricing for Gemini, OpenAI, Claude, Groq, Mistral and more change without warning. This page re-verifies them every day — automatically.</p>
+    <div class="updated" data-i18n-skip>🟢 <span data-i18n="lastUpdated">Data last verified:</span> <b id="lastUpdated">—</b></div>
+  </div>
+
+  <section id="tracker">
+    <h2 data-i18n="trackerH">Free Tier Tracker</h2>
+    <p class="sub" data-i18n="trackerSub">What you can use for $0 right now — and what it costs when you outgrow it.</p>
+    <div class="controls">
+      <button class="tab active" data-cat="all" data-i18n="tabAll">All</button>
+      <button class="tab" data-cat="llm-api" data-i18n="tabLlm">LLM APIs</button>
+      <button class="tab" data-cat="infra" data-i18n="tabInfra">Free Infrastructure</button>
+      <input type="search" id="search" placeholder="Search services..." data-i18n-ph="searchPh">
+    </div>
+    <div class="tablewrap">
+      <table id="tbl">
+        <thead><tr>
+          <th data-i18n="thService">Service</th>
+          <th data-i18n="thFree">Free tier</th>
+          <th data-i18n="thNotes">Caveats</th>
+          <th data-i18n="thPaid">Paid pricing</th>
+          <th data-i18n="thBest">Best for</th>
+          <th data-i18n="thVerified">Verified</th>
+        </tr></thead>
+        <tbody id="tbody"><tr><td colspan="6" class="loading">Loading data…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="calculator">
+    <h2 data-i18n="calcH">Cost Calculator — cheapest model for your workload</h2>
+    <p class="sub" data-i18n="calcSub">Drag the sliders to your estimated monthly usage. Green bars = the free tier likely covers you.</p>
+    <div class="calc">
+      <div class="row">
+        <div class="field">
+          <label data-i18n="calcIn">Input tokens / month (millions)</label>
+          <input type="range" id="inTok" min="0" max="200" step="1" value="10">
+          <div class="val"><span id="inTokV">10</span>M tokens</div>
+        </div>
+        <div class="field">
+          <label data-i18n="calcOut">Output tokens / month (millions)</label>
+          <input type="range" id="outTok" min="0" max="100" step="1" value="3">
+          <div class="val"><span id="outTokV">3</span>M tokens</div>
+        </div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </div>
+  </section>
+
+  <section id="changes">
+    <h2 data-i18n="chH">Recent changes</h2>
+    <p class="sub" data-i18n="chSub">Detected automatically by the daily verification run.</p>
+    <div class="changes" id="changelog"><div class="change" data-i18n="chEmpty">No changes detected yet — tracking started July 2026.</div></div>
+  </section>
+
+  <section id="support">
+    <div class="grid2">
+      <div class="card">
+        <h3 data-i18n="kofiH">☕ Keep this tracker free</h3>
+        <p data-i18n="kofiP">FreeTierWatch runs on $0/month infrastructure and is maintained by an indie builder. If it saved you a dig through five pricing pages, a coffee keeps it alive.</p>
+        <a class="cta alt" id="kofiLink" href="#" target="_blank" rel="noopener" data-i18n="kofiBtn">Buy me a coffee</a>
+      </div>
+      <div class="card">
+        <h3 data-i18n="gumH">📘 The $0 AI Stack Playbook</h3>
+        <p data-i18n="gumP">A practical guide to running real AI apps entirely on free tiers — the exact stack behind this site (GitHub Actions + free LLM APIs + free hosting), with copy-paste templates.</p>
+        <a class="cta" id="gumroadLink" href="#" target="_blank" rel="noopener" data-i18n="gumBtn">Get the playbook</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" id="faq">
+    <h2 data-i18n="faqH">FAQ</h2>
+    <details><summary data-i18n="q1">What is the Gemini API free tier limit right now?</summary><p data-i18n="a1">Check the tracker table above — it's re-verified daily against Google's official docs. Free quotas have changed without notice in the past, which is exactly why this site exists.</p></details>
+    <details><summary data-i18n="q2">Which AI API is completely free for hobby projects?</summary><p data-i18n="a2">As of the last verification, the entries marked green in the table offer genuinely usable free tiers. For most hobby workloads, a free LLM API plus free hosting (see the Infrastructure tab) runs at $0/month.</p></details>
+    <details><summary data-i18n="q3">How is this data verified?</summary><p data-i18n="a3">A GitHub Actions job runs daily: it fetches each provider's official pricing/docs page, extracts the current limits, and updates this site automatically when something changed. Confidence badges show how the data was sourced. Always confirm on the official page before making business decisions.</p></details>
+    <details><summary data-i18n="q4">Can I suggest a service to track?</summary><p data-i18n="a4">Yes — open an issue on the GitHub repository (link in the footer).</p></details>
+  </section>
+</div>
+
+<footer><div class="wrap">
+  <p class="disclaimer" data-i18n="disc">Prices and quotas are collected automatically from public sources and may lag or contain errors. This site is informational only — always verify on the provider's official page. Some outbound links may be referral links that support the site at no cost to you.</p>
+  <p style="margin-top:10px">© 2026 FreeTierWatch · <a id="repoLink" href="#" target="_blank" rel="noopener">GitHub</a> · <a href="#tracker">Tracker</a> · <a href="#calculator">Calculator</a></p>
+</div></footer>
+
+<script>
+/* ===== CONFIG — edit these once your accounts exist ===== */
+const LINKS = {
+  kofi: "https://ko-fi.com/YOUR_KOFI_NAME",        // ← Ko-fi登録後にIDを入れる
+  gumroad: "https://YOURNAME.gumroad.com/l/ai-zero-stack", // ← Gumroad商品URL
+  repo: "https://github.com/YOUR_GITHUB/freetierwatch"     // ← 公開リポジトリURL
+};
+/* ======================================================== */
+
+const I18N = {
+ en:{badge:"auto-verified daily",support:"☕ Support",
+  h1:'Every AI API free tier.<br><em>Tracked daily, so you don\'t have to.</em>',
+  heroP:"Free-tier limits and pricing for Gemini, OpenAI, Claude, Groq, Mistral and more change without warning. This page re-verifies them every day — automatically.",
+  lastUpdated:"Data last verified:",trackerH:"Free Tier Tracker",
+  trackerSub:"What you can use for $0 right now — and what it costs when you outgrow it.",
+  tabAll:"All",tabLlm:"LLM APIs",tabInfra:"Free Infrastructure",searchPh:"Search services...",
+  thService:"Service",thFree:"Free tier",thNotes:"Caveats",thPaid:"Paid pricing",thBest:"Best for",thVerified:"Verified",
+  calcH:"Cost Calculator — cheapest model for your workload",
+  calcSub:"Drag the sliders to your estimated monthly usage. Green bars = the free tier likely covers you.",
+  calcIn:"Input tokens / month (millions)",calcOut:"Output tokens / month (millions)",
+  chH:"Recent changes",chSub:"Detected automatically by the daily verification run.",
+  chEmpty:"No changes detected yet — tracking started July 2026.",
+  kofiH:"☕ Keep this tracker free",
+  kofiP:"FreeTierWatch runs on $0/month infrastructure and is maintained by an indie builder. If it saved you a dig through five pricing pages, a coffee keeps it alive.",
+  kofiBtn:"Buy me a coffee",gumH:"📘 The $0 AI Stack Playbook",
+  gumP:"A practical guide to running real AI apps entirely on free tiers — the exact stack behind this site (GitHub Actions + free LLM APIs + free hosting), with copy-paste templates.",
+  gumBtn:"Get the playbook",faqH:"FAQ",
+  q1:"What is the Gemini API free tier limit right now?",
+  a1:"Check the tracker table above — it's re-verified daily against Google's official docs. Free quotas have changed without notice in the past, which is exactly why this site exists.",
+  q2:"Which AI API is completely free for hobby projects?",
+  a2:"As of the last verification, the entries marked green in the table offer genuinely usable free tiers. For most hobby workloads, a free LLM API plus free hosting (see the Infrastructure tab) runs at $0/month.",
+  q3:"How is this data verified?",
+  a3:"A GitHub Actions job runs daily: it fetches each provider's official pricing/docs page, extracts the current limits, and updates this site automatically when something changed. Confidence badges show how the data was sourced. Always confirm on the official page before making business decisions.",
+  q4:"Can I suggest a service to track?",a4:"Yes — open an issue on the GitHub repository (link in the footer).",
+  disc:"Prices and quotas are collected automatically from public sources and may lag or contain errors. This site is informational only — always verify on the provider's official page. Some outbound links may be referral links that support the site at no cost to you.",
+  freeCovered:"free tier may cover this",month:"/mo"},
+ ja:{badge:"毎日自動検証",support:"☕ 応援する",
+  h1:'すべてのAI APIの無料枠を、<br><em>毎日自動で追跡。</em>',
+  heroP:"Gemini、OpenAI、Claude、Groq、MistralなどのAI APIの無料枠と料金は予告なく変わります。このページは毎日自動で再検証しています。",
+  lastUpdated:"最終検証日:",trackerH:"無料枠トラッカー",
+  trackerSub:"いま$0で使えるものと、超えたときの料金。",
+  tabAll:"すべて",tabLlm:"LLM API",tabInfra:"無料インフラ",searchPh:"サービスを検索...",
+  thService:"サービス",thFree:"無料枠",thNotes:"注意点",thPaid:"有料料金",thBest:"向いている用途",thVerified:"検証日",
+  calcH:"コスト計算 — あなたの使用量で最安のモデルは?",
+  calcSub:"月間の推定使用量にスライダーを合わせてください。緑のバー=無料枠で収まる可能性が高いもの。",
+  calcIn:"入力トークン/月(百万)",calcOut:"出力トークン/月(百万)",
+  chH:"最近の変更",chSub:"毎日の自動検証で検出された変更点。",
+  chEmpty:"まだ変更は検出されていません — 2026年7月から追跡開始。",
+  kofiH:"☕ このトラッカーを支える",
+  kofiP:"FreeTierWatchは月額$0のインフラで動く個人運営サイトです。料金ページを5つ調べる手間が省けたなら、コーヒー1杯の応援が励みになります。",
+  kofiBtn:"コーヒーをおごる",gumH:"📘 $0 AIスタック実践ガイド",
+  gumP:"無料枠だけで本物のAIアプリを動かす実践ガイド。このサイト自体を動かしている構成(GitHub Actions+無料LLM API+無料ホスティング)をコピペ可能なテンプレ付きで解説。",
+  gumBtn:"ガイドを入手",faqH:"よくある質問",
+  q1:"Gemini APIの無料枠の上限は今いくつ?",
+  a1:"上のトラッカー表を確認してください。Googleの公式ドキュメントに対して毎日再検証しています。無料枠は過去に予告なく変更されており、それがこのサイトの存在理由です。",
+  q2:"趣味プロジェクトで完全無料で使えるAI APIは?",
+  a2:"最終検証時点で、表の緑色の項目が実用的な無料枠を提供しています。多くの趣味用途なら、無料LLM API+無料ホスティング(インフラタブ参照)で月$0で動きます。",
+  q3:"データはどうやって検証している?",
+  a3:"GitHub Actionsのジョブが毎日実行され、各社の公式料金ページを取得して現在の上限を抽出し、変更があればこのサイトを自動更新します。信頼度バッジはデータの出所を示します。ビジネス判断の前には必ず公式ページで確認してください。",
+  q4:"追跡してほしいサービスをリクエストできる?",a4:"はい。フッターのGitHubリポジトリでissueを立ててください。",
+  disc:"料金・無料枠は公開情報から自動収集しており、遅延や誤りを含む可能性があります。本サイトは情報提供のみを目的とします。必ず提供元の公式ページでご確認ください。一部のリンクは、あなたの負担なくサイト運営を支える紹介リンクの場合があります。",
+  freeCovered:"無料枠で収まる可能性",month:"/月"}
+};
+let lang = (navigator.language||"").startsWith("ja") ? "ja" : "en";
+let DATA = {services:[]}, CHANGES = [];
+
+function applyI18n(){
+  const d = I18N[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(d[k])el.textContent=d[k];});
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(d[k])el.innerHTML=d[k];});
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{const k=el.dataset.i18nPh;if(d[k])el.placeholder=d[k];});
+  document.getElementById("langBtn").textContent = lang==="en" ? "日本語" : "English";
+  renderTable(); renderCalc(); renderChanges();
+}
+document.getElementById("langBtn").onclick=()=>{lang=lang==="en"?"ja":"en";applyI18n();};
+
+let activeCat="all";
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");activeCat=t.dataset.cat;renderTable();
+});
+document.getElementById("search").oninput=renderTable;
+
+function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+
+function renderTable(){
+  const q=(document.getElementById("search").value||"").toLowerCase();
+  const rows=DATA.services.filter(s=>
+    (activeCat==="all"||s.category===activeCat)&&
+    (!q||JSON.stringify(s).toLowerCase().includes(q)));
+  const tb=document.getElementById("tbody");
+  if(!rows.length){tb.innerHTML='<tr><td colspan="6" class="loading">—</td></tr>';return;}
+  tb.innerHTML=rows.map(s=>`<tr>
+    <td class="svc"><a href="${esc(s.source_url)}" target="_blank" rel="noopener">${esc(s.name)}</a>
+      <span class="cat">${s.category==="llm-api"?"LLM API":"Infrastructure"}</span></td>
+    <td class="freecell">${esc(s.free_tier)}</td>
+    <td class="notes">${esc(s.free_tier_notes||"")}</td>
+    <td class="price">${esc(s.paid_price||"—")}</td>
+    <td>${esc(s.best_for||"")}</td>
+    <td class="verified">${esc(s.last_verified||"")}<br><span class="conf ${esc(s.confidence||"medium")}">${esc(s.confidence||"medium")}</span></td>
+  </tr>`).join("");
+}
+
+const inTok=document.getElementById("inTok"),outTok=document.getElementById("outTok");
+[inTok,outTok].forEach(el=>el.oninput=renderCalc);
+function renderCalc(){
+  const inM=+inTok.value,outM=+outTok.value;
+  document.getElementById("inTokV").textContent=inM;
+  document.getElementById("outTokV").textContent=outM;
+  const priced=DATA.services.filter(s=>s.price_in_per_m!=null&&s.price_out_per_m!=null)
+    .map(s=>({name:s.price_model_label||s.name,cost:inM*s.price_in_per_m+outM*s.price_out_per_m,
+      freeFit:!!s.free_fit_m && (inM+outM)<=s.free_fit_m}))
+    .sort((a,b)=>a.cost-b.cost);
+  const max=Math.max(...priced.map(p=>p.cost),1);
+  document.getElementById("bars").innerHTML=priced.map(p=>`
+    <div class="barrow ${p.freeFit?"freefit":""}">
+      <div class="name">${esc(p.name)}${p.freeFit?" 🟢":""}</div>
+      <div class="bartrack"><div class="barfill" style="width:${Math.max(2,p.cost/max*100)}%"></div></div>
+      <div class="cost">$${p.cost.toFixed(2)}${I18N[lang].month}</div>
+    </div>`).join("")+
+    (priced.some(p=>p.freeFit)?`<p style="color:var(--free);font-size:.82rem;margin-top:8px">🟢 = ${I18N[lang].freeCovered}</p>`:"");
+}
+
+function renderChanges(){
+  const el=document.getElementById("changelog");
+  if(!CHANGES.length){el.innerHTML=`<div class="change">${I18N[lang].chEmpty}</div>`;return;}
+  el.innerHTML=CHANGES.slice(0,12).map(c=>`<div class="change"><span class="date">${esc(c.date)}</span> — <b>${esc(c.service)}</b>: ${esc(c.change)}</div>`).join("");
+}
+
+async function load(){
+  try{
+    const r=await fetch("data/services.json?v="+Date.now());DATA=await r.json();
+    document.getElementById("lastUpdated").textContent=DATA.meta?.last_updated||"—";
+  }catch(e){console.error(e);}
+  try{
+    const r2=await fetch("data/changelog.json?v="+Date.now());CHANGES=(await r2.json()).changes||[];
+  }catch(e){CHANGES=[];}
+  document.getElementById("kofiLink").href=LINKS.kofi;
+  document.getElementById("kofiTop").href=LINKS.kofi;
+  document.getElementById("gumroadLink").href=LINKS.gumroad;
+  document.getElementById("repoLink").href=LINKS.repo;
+  applyI18n();
+}
+load();
+</script>
+</body>
+</html>
