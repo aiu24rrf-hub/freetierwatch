@@ -1,0 +1,32 @@
+name: Daily data verification
+
+on:
+  schedule:
+    - cron: "17 21 * * *"   # 21:17 UTC = 06:17 JST daily
+  workflow_dispatch: {}      # 手動実行ボタンも使えるように
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run updater
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/update_data.py
+
+      - name: Commit changes (if any)
+        run: |
+          git config user.name "freetierwatch-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "chore: daily data verification $(date -u +%F)"
+          git push
